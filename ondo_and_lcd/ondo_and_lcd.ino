@@ -16,7 +16,7 @@ byte contrast = 40; // 0-63 5V系だとかなり少なくする
 
 // 温度
 float situdo=0;
-int kion=0;
+float kion=0;
 unsigned char am2321_I2C_adr = 0x5c; // b8 >>1 and 7f
 
 void lcd_cmd(byte x)
@@ -74,7 +74,7 @@ void setup()
   lcd_init();
   lcd_puts("Hello, Arduino!");
   lcd_move(0x40);
-  lcd_puts("i2c LCD module");
+  lcd_puts("Sensor Start");
   
   pinMode(ledPin, OUTPUT); // Lチカ
 }
@@ -101,7 +101,7 @@ void gettempandhum()
     Serial.println(data[byte_no],HEX);
     byte_no++;
   }
-  situdo = (data[2]*0xff+data[3])/10;
+  situdo = (data[2]*0xff+data[3])/10.0f;
   
   if (data[4] & 0x80){
     kion=((data[4] & 0x7f)*0xff) + data[5];
@@ -113,12 +113,25 @@ void gettempandhum()
 void loop()
 {
   char buff[16];
+  gettempandhum();
+  // 画面クリア
+  lcd_cmd(0x01);
   
-  lcd_puts("kion=");
-  itoa(kion, buff, sizeof(buff));
+  // 温度表示
+  lcd_puts("Temp:");
+  dtostrf(kion / 10.0f, 7, 1, buff);
+  lcd_puts(buff);
+  lcd_puts(" C");
+  lcd_move(0x40);
+  // 湿度
+  lcd_puts("Hum :");
+  dtostrf(situdo, 7, 1, buff);
+  lcd_puts(buff);
+  lcd_puts(" %");
+  // LED
   digitalWrite(ledPin, HIGH);
   delay(100);
   digitalWrite(ledPin, LOW);
-  delay(500);
+  delay(2000);
 }
 
